@@ -25,17 +25,25 @@ class EdgeTest {
 
     @Test
     void getInfo() {
+        String s="";
+        assertEquals(e1.getInfo(),s);
     }
 
     @Test
     void setInfo() {
+        String s="Edge";
+        e1.setInfo(s);
+        assertEquals(e1.getInfo(),s);
     }
 
     @Test
     void getTag() {
+        assertEquals(e1.getTag(),0);
     }
 
     @Test
     void setTag() {
+        e1.setTag(2);
+        assertEquals(2,e1.getTag());
     }
 }

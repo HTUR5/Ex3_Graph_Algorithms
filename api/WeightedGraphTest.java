@@ -21,7 +21,7 @@ class WeightedGraphTest {
     void getNode() {
         gr1.addNode(n1);
         gr1.addNode(n2);
-        gr1.addNode(n3); //what is weight of node
+        gr1.addNode(n3);
         gr1.addNode(n4);
         (gr1.getNode(2)).equals(new Node(2,new geo_location(5,1,8), 0, "", 0));
         (gr1.getNode(0)).equals(NodeTest.n1);
@@ -43,7 +43,7 @@ class WeightedGraphTest {
         Edge e2b = (Edge) gr1.getEdge(n4.getKey(),n3.getKey());
         e1b.equals(e1a);
         e2b.equals(e2a);
-        assertNull(gr1.getEdge(5,3));
+        assertNull(gr1.getEdge(100,3));
     }
 
     @Test
@@ -64,6 +64,9 @@ class WeightedGraphTest {
         assertTrue(gr1.getEdgeMap().containsKey(p));
         assertTrue(gr1.getEdgeMapS().get(n1.getKey()).containsKey(n2.getKey()));
         assertTrue(gr1.getEdgeMapD().get(n2.getKey()).containsKey(n1.getKey()));
+        gr1.connect(100,50,4);
+        n1.setWeight(100);
+        assertEquals(gr1.getNode(gr1.getEdge(n1.getKey(),n2.getKey()).getSrc()).getWeight(),100);
     }
 
     @Test
@@ -92,14 +95,21 @@ class WeightedGraphTest {
         gr2.connect(n1.getKey(),n2.getKey(),4);
         gr2.connect(n2.getKey(),n3.getKey(),3);
         gr2.connect(n4.getKey(),n3.getKey(),6);
-        gr2.removeNode(2);
+        gr2.removeNode(2).equals(n3);
+        assertNull(gr2.removeNode(2));
         assertTrue(!gr2.getNodesMap().containsKey(2));
         for (Point2D me : gr2.getEdgeMap().keySet()) {
             assertTrue(me.getX() != 2 && me.getY() != 2);
         }
         assertTrue(!gr2.getEdgeMapS().containsKey(2));
         assertTrue(!gr2.getEdgeMapD().containsKey(2));
+        assertEquals(gr2.getEdgeMapS().size(), 1);
+        assertEquals(gr2.getEdgeMapD().size(), 1);
+        assertEquals(gr2.getEdgeMap().size(), 1);
+        assertEquals(gr2.getNodesMap().size(), 3);
+        assertEquals(gr2.getMC(), 4);
     }
+
 
     @Test
     void removeEdge() {
@@ -110,7 +120,13 @@ class WeightedGraphTest {
         gr1.connect(n1.getKey(),n2.getKey(),4);
         gr1.connect(n2.getKey(),n3.getKey(),3);
         gr1.connect(n4.getKey(),n3.getKey(),6);
-        gr1.removeEdge(0,1);
+        Edge edge = (Edge) gr1.getEdgeMapS().get(n1.getKey()).get(n2.getKey());
+        gr1.removeEdge(0,1).equals(edge);
+        assertNull(gr1.removeEdge(50,1));
+        assertEquals(gr1.getMC(), 6);
+        assertEquals(gr1.getEdgeMap().size(), 2);
+        assertEquals(gr1.getEdgeMapS().size(), 2);
+        assertEquals(gr1.getEdgeMapD().size(), 1);
     }
 
     @Test

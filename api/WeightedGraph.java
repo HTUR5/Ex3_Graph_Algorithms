@@ -1,5 +1,4 @@
 package api;
-//junit: class -> code -> generate -> test
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.HashMap;
@@ -8,16 +7,17 @@ import java.util.Map;
 
 public class WeightedGraph implements DirectedWeightedGraph{
     private HashMap<Integer,Node> nodesMap;
-    private HashMap<Point2D, EdgeData> edgeMap;
-    private HashMap<Integer, HashMap<Integer, EdgeData>> edgeMapS;
-    private HashMap<Integer, HashMap<Integer, EdgeData>> edgeMapD;
-    private int count = 0;
+    private HashMap<Point2D, EdgeData> edgeMap; //point.x = edge.src.key, point.y = edge.dest.key
+    private HashMap<Integer, HashMap<Integer, EdgeData>> edgeMapS; //key = edge.src.key and its value is all the edge which go out of this node (the dest)
+    private HashMap<Integer, HashMap<Integer, EdgeData>> edgeMapD; //key = edge.dest.key and its value is all the edge which go in of this node (the src)
+    private int count;
 
     public WeightedGraph(){
         this.nodesMap = new HashMap<>();
         this.edgeMap = new HashMap<>();
         this.edgeMapS = new HashMap<>();
         this.edgeMapD = new HashMap<>();
+        this.count = 0;
     }
 
     public HashMap<Integer, Node> getNodesMap() {
@@ -61,30 +61,32 @@ public class WeightedGraph implements DirectedWeightedGraph{
 
     @Override
     public void connect(int src, int dest, double w) {
-        Node n1= (Node)this.getNode(src);
-        Node n2 = (Node)this.getNode(dest);
-        Edge edge = new Edge(n1 , n2, w,"",0);
-        //for edgeMapS
-        if(this.edgeMapS.get(src) == null) {
-            HashMap<Integer, EdgeData> innerMap = new HashMap<>();
-            this.edgeMapS.put(src,innerMap);
-            innerMap.put(dest,edge);
-        } else {
-            this.edgeMapS.get(src).put(dest, edge);
-        }
-        //for edgeMapD
-        if(this.edgeMapD.get(dest) == null) {
-            HashMap<Integer, EdgeData> innerMap = new HashMap<>();
-            this.edgeMapD.put(dest,innerMap);
-            innerMap.put(src,edge);
-        } else {
-            this.edgeMapD.get(dest).put(src, edge);
-        }
-        //for edgeMap
-        Point2D p2 = new Point(src ,dest);
-        this.edgeMap.put(p2,edge);
+        if (this.nodesMap.containsKey(src) && this.nodesMap.containsKey(dest)) {
+            Node n1 = (Node) this.getNode(src);
+            Node n2 = (Node) this.getNode(dest);
+            Edge edge = new Edge(n1, n2, w, "", 0);
+            //for edgeMapS
+            if (this.edgeMapS.get(src) == null) {
+                HashMap<Integer, EdgeData> innerMap = new HashMap<>();
+                this.edgeMapS.put(src, innerMap);
+                innerMap.put(dest, edge);
+            } else {
+                this.edgeMapS.get(src).put(dest, edge);
+            }
+            //for edgeMapD
+            if (this.edgeMapD.get(dest) == null) {
+                HashMap<Integer, EdgeData> innerMap = new HashMap<>();
+                this.edgeMapD.put(dest, innerMap);
+                innerMap.put(src, edge);
+            } else {
+                this.edgeMapD.get(dest).put(src, edge);
+            }
+            //for edgeMap
+            Point2D p2 = new Point(src, dest);
+            this.edgeMap.put(p2, edge);
 
-        count++;
+            count++;
+        }
     }
 
     @Override
@@ -109,6 +111,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
 
     @Override
     public NodeData removeNode(int key) {
+        if(!this.nodesMap.containsKey(key)) {return null;}
         NodeData node = this.getNode(key);
         //remove all the edge from edgeMapD when key is src from edgeMapS
         if(this.edgeMapS.get(key) != null) {
@@ -118,6 +121,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
                 //remove from edgeMap
                 Point2D p = new Point(key, dest);
                 this.edgeMap.remove(p);
+                count--;
                 if(this.edgeMapD.get(dest).isEmpty()) {
                     this.edgeMapD.remove(dest);
                 }
@@ -132,6 +136,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
                 //remove from edgeMap
                 Point2D p = new Point(src, key);
                 this.edgeMap.remove(p);
+                count--;
                 if(this.edgeMapS.get(src).isEmpty()) {
                     this.edgeMapS.remove(src);
                 }
@@ -146,6 +151,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
 
     @Override
     public EdgeData removeEdge(int src, int dest) {
+        if(this.getEdge(src, dest) == null) {return null;}
         Edge edge = (Edge) this.getEdge(src, dest);
         this.edgeMapD.get(dest).remove(src);
         if(this.edgeMapD.get(dest).isEmpty()) {
@@ -179,6 +185,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
     public int getMC() {
         return count;
     }
+
     public String toString(){
         Iterator itNodes = this.nodeIter();
         Iterator itEdges = this.edgeIter();

@@ -14,20 +14,20 @@ import java.util.List;
 
 public class algo implements DirectedWeightedGraphAlgorithms {
 
-    private WeightedGraph g;
+    private WeightedGraph ourGraph;
 
     public algo() {
-        this.g = new WeightedGraph();
+        this.ourGraph = new WeightedGraph();
     }
 
     @Override
     public void init(DirectedWeightedGraph g) {
-        this.g = (WeightedGraph) g;
+        this.ourGraph = (WeightedGraph) g;
     }
 
     @Override
     public DirectedWeightedGraph getGraph() {
-        return this.g;
+        return this.ourGraph;
     }
 
     @Override
@@ -40,15 +40,17 @@ public class algo implements DirectedWeightedGraphAlgorithms {
         if (g.getNodesMap().size() > 0) {
             for (Integer me : g.getNodesMap().keySet()) {
                 int src = me;
-                copy.addNode(g.getNodesMap().get(src));
+                copy.addNode(new Node(g.getNodesMap().get(src)));
             }
         }
         //copy edges
         if (g.getEdgeMap().size() > 0) {
             for (Point2D me : g.getEdgeMap().keySet()) {
-                Edge edge = (Edge) g.getEdgeMap().get(me);
+                Edge edgeToCopy = (Edge) g.getEdgeMap().get(me);
+                Edge edge = new Edge((Node) copy.getNode((int) me.getX()),(Node)copy.getNode((int) me.getY()), edgeToCopy.getWeight(), edgeToCopy.getInfo(),edgeToCopy.getTag());
                 //add to edges
-                copy.getEdgeMap().put(me, edge);
+                Point2D p = new Point((int) me.getX(),(int)me.getY());
+                copy.getEdgeMap().put(p, edge);
                 //add to adgesS
                 if (copy.getEdgeMapS().containsKey((int) me.getX())) {
                     copy.getEdgeMapS().get((int) me.getX()).put((int) me.getY(), edge);
@@ -57,7 +59,7 @@ public class algo implements DirectedWeightedGraphAlgorithms {
                     copy.getEdgeMapS().put((int) me.getX(), innerMap);
                     innerMap.put((int) me.getY(), edge);
                 }
-                //add to adgesS
+                //add to adgesD
                 if (copy.getEdgeMapD().containsKey((int) me.getY())) {
                     copy.getEdgeMapD().get((int) me.getY()).put((int) me.getX(), edge);
                 } else {
@@ -73,20 +75,19 @@ public class algo implements DirectedWeightedGraphAlgorithms {
     @Override
     public boolean isConnected() {
         WeightedGraph g = (WeightedGraph) this.getGraph();
-        //make an adjacency list for graph g
-        //adjacency list = getEdgeMapS()
-        // Step 1: Mark all the vertices as not visited (For first DFS)
+        //adjacency list for graph g = getEdgeMapS()
+        // Step 1: Mark all the vertices as not visited (For first BFS)
         HashMap<Integer, Boolean> visited = new HashMap<>();
-        int k = 0;
+        int keyStart = 0;
         for (Integer key : g.getNodesMap().keySet()) {
             visited.put(key, false);
-            k = key;
+            keyStart = key;
         }
         // Step 2: Do BFS traversal starting from first vertex.
-        BFS(k, visited);
+        BFS(keyStart, visited);
         // If BFS traversal doesn't visit all vertices, then return false.
         for (Integer i : visited.keySet()) {
-            if (visited.get(i) == false) {
+            if (!visited.get(i)) {
                 return false;
             }
         }
@@ -95,17 +96,15 @@ public class algo implements DirectedWeightedGraphAlgorithms {
         WeightedGraph graphT = (WeightedGraph) this.copy();
         gT.init(graphT);
         gT.getTranspose();
-        // Step 4: Mark all the vertices as not visited (For second DFS)
+        // Step 4: Mark all the vertices as not visited (For second BFS)
         for (Integer i : visited.keySet()) {
-            //visited.remove(i);
             visited.replace(i, false);
         }
-        // Step 5: Do BFS for reversed graph starting from first vertex.
-        // Starting Vertex must be same starting point of first BFS
-        gT.BFS(k, visited);
+        // Step 5: Do BFS for reversed graph starting from first vertex. Starting Vertex must be same starting point of first BFS
+        gT.BFS(keyStart, visited);
         // If all vertices are not visited in second BFS, then return false
         for (Integer i : visited.keySet()) {
-            if (visited.get(i) == false) {
+            if (!visited.get(i)) {
                 return false;
             }
         }
@@ -118,7 +117,6 @@ public class algo implements DirectedWeightedGraphAlgorithms {
         gT.getEdgeMapS().clear();
         for(Integer me: gT.getEdgeMapD().keySet()) {  //me = src of transposed graph
             for (Integer me1: gT.getEdgeMapD().get(me).keySet()) { //me1 = dest of transposed graph
-                //Point2D p = new Point(me,me1);
                 Edge edge = new Edge((Node)gT.getNode(me), (Node)gT.getNode(me1),gT.getEdge(me1,me).getWeight(),"",0);
                 if(gT.getEdgeMapS().get(me) == null) {
                     HashMap<Integer, EdgeData> innerMap = new HashMap<>();
@@ -131,19 +129,17 @@ public class algo implements DirectedWeightedGraphAlgorithms {
         }
     }
 
-    private void BFS(int nodeKey ,HashMap<Integer, Boolean> visited) {
+    private void BFS(int nodeStart ,HashMap<Integer, Boolean> visited) {
         WeightedGraph g = (WeightedGraph) getGraph();
         LinkedList<Integer> queue = new LinkedList<>();
-        visited.remove(nodeKey);
-        visited.put(nodeKey,true);
-        queue.add(nodeKey);
+        visited.replace(nodeStart,true);
+        queue.add(nodeStart);
         while (queue.size() != 0) {
-            nodeKey = queue.poll();
-            if(g.getEdgeMapS().get(nodeKey)!= null) {
-                for (Integer n : g.getEdgeMapS().get(nodeKey).keySet()) {
+            nodeStart = queue.poll();
+            if(g.getEdgeMapS().get(nodeStart)!= null) {
+                for (Integer n : g.getEdgeMapS().get(nodeStart).keySet()) {
                     if (!visited.get(n)) {
-                        visited.remove(n);
-                        visited.put(n, true);
+                        visited.replace(n, true);
                         queue.add(n);
                     }
                 }
@@ -154,98 +150,63 @@ public class algo implements DirectedWeightedGraphAlgorithms {
     @Override
     public double shortestPathDist(int src, int dest) {
         if(src == dest){
+            ourGraph.getNode(dest).setTag(src);
             return 0;
         }
-        int V=g.nodeSize();
-        Set<Node> settled = new HashSet<Node>();
-        PriorityQueue<Node> pq = new PriorityQueue<Node>(V, new NodeComperator());
-        Node srcNode = (Node) g.getNode(src);
-        srcNode.setWeight(0); //  O(1)
-        pq.offer(srcNode); //O(logV)
-        Iterator<NodeData> nIterator = g.nodeIter(); //O(1)
-        while (nIterator.hasNext()) { //O(V)
+        int V=ourGraph.nodeSize();
+        Set<Node> settled = new HashSet<>();
+        PriorityQueue<Node> pq = new PriorityQueue<>(V, new NodeComperator());
+        Node srcNode = (Node) ourGraph.getNode(src);
+        srcNode.setWeight(0);
+        pq.add(srcNode);
+        Iterator<NodeData> nIterator = ourGraph.nodeIter();
+        while (nIterator.hasNext()) {
             Node n = (Node) nIterator.next();
             if (n.getKey() != srcNode.getKey()) {
                 n.setWeight(Double.MAX_VALUE);
-                //n.setPrev(null);
-                settled.add(n); //O(logV)
+                settled.add(n);
             }
         }
-        //O(V+E) * O(logV) = O(ElogV)
         while (!settled.isEmpty()) {
-            if(pq.peek() != null && pq.peek() == g.getNode(dest)){
+            if(pq.peek() != null && pq.peek() == ourGraph.getNode(dest)){
                 return pq.peek().getWeight();
             }
             if(pq.peek() != null && pq.peek().getWeight() == Double.MAX_VALUE){
                 return -1;
             }
             Node node = pq.poll();
-            //O(logV)
-            Iterator<EdgeData> eIterator = g.edgeIter(node.getKey());
+            Iterator<EdgeData> eIterator = ourGraph.edgeIter(node.getKey());
             while (eIterator.hasNext()) {
                 EdgeData neighborEdge = eIterator.next();
-                int neighborKey = neighborEdge.getDest();
-                Node neighbor = (Node) g.getNode(neighborKey);
-                if (neighbor.getWeight() > (node.getWeight() + neighborEdge.getWeight())) {
-                    neighbor.setWeight(node.getWeight() + neighborEdge.getWeight());
-                    //neighbor.setPrev(curr);
-                    pq.offer(neighbor); //O(logv)
+                int nKey = neighborEdge.getDest();
+                Node sunOfNode = (Node) ourGraph.getNode(nKey);
+                if (sunOfNode.getWeight() > (node.getWeight() + neighborEdge.getWeight())) {
+                    sunOfNode.setTag(node.getKey());
+                    sunOfNode.setWeight(node.getWeight() + neighborEdge.getWeight());
+                    pq.add(sunOfNode);
                 }
             }
         }
-
-        return g.getNode(dest).getWeight();
+        return ourGraph.getNode(dest).getWeight();
     }
 
     @Override
     public List<NodeData> shortestPath(int src, int dest) {
-        List<NodeData> list = new ArrayList<NodeData>() ;
+        List<NodeData> list = new ArrayList<>() ;
         if(src == dest){
-            list.add(g.getNode(src));
-            return list ;
+            list.add(ourGraph.getNode(dest));
+            return list;
         }
-        int V=g.nodeSize();
-        Set<Node> settled = new HashSet<Node>();
-        PriorityQueue<Node> pq = new PriorityQueue<Node>(V, new NodeComperator());
-        Node srcNode = (Node) g.getNode(src);
-        //  O(1)
-        pq.offer(srcNode); //O(logV)
-        Iterator<NodeData> nIterator = g.nodeIter(); //O(1)
-        while (nIterator.hasNext()) { //O(V)
-            Node n = (Node) nIterator.next();
-            if (n.getKey() != srcNode.getKey()) {
-                n.setWeight(Double.MAX_VALUE);
-                //n.setPrev(null);
-                settled.add(n); //O(logV)
-            }
+        shortestPathDist(src,dest);
+        Node n= (Node) ourGraph.getNode(dest);
+        Node nSrc= (Node) ourGraph.getNode(src);
+        while(n.getTag()!= nSrc.getKey()){
+            list.add(0,n);
+            n= (Node) ourGraph.getNode(n.getTag());
         }
-
-        while (!settled.isEmpty()) {
-
-            if(pq.peek() != null && pq.peek() == g.getNode(dest)){
-                list.add(g.getNode(dest));
-                return list;
-            }
-            if(pq.peek() != null && pq.peek().getWeight() == Double.MAX_VALUE){
-                return null;
-            }
-            Node node = pq.poll();
-            list.add(node);
-            settled.remove(node);
-            Iterator<EdgeData> eIterator = g.edgeIter(node.getKey());
-            while (eIterator.hasNext()) {
-                EdgeData nNode = eIterator.next();
-                int nKey = nNode.getDest();
-                Node neighbor = (Node) g.getNode(nKey);
-                if (neighbor.getWeight() > (node.getWeight() + nNode.getWeight())) {
-                    neighbor.setWeight(node.getWeight() + nNode.getWeight());
-                    //neighbor.setPrev(curr);
-                    pq.add(neighbor);
-                }
-            }
-        }
-
-        return null;
+        list.add(0,n);
+        list.add(0,nSrc);
+        return list;
     }
 
     @Override
@@ -256,11 +217,11 @@ public class algo implements DirectedWeightedGraphAlgorithms {
         double max;
         double min = Double.MAX_VALUE;
         NodeData centerOfGraph = null;
-        for (Integer me : g.getNodesMap().keySet()) {
-            Node node = (Node) g.getNode(me);
+        for (Integer me : ourGraph.getNodesMap().keySet()) {
+            Node node = (Node) ourGraph.getNode(me);
             max = Double.MIN_VALUE;
-            for (Integer me1 : g.getNodesMap().keySet()) {
-                Node node1 = (Node) g.getNode(me1);
+            for (Integer me1 : ourGraph.getNodesMap().keySet()) {
+                Node node1 = (Node) ourGraph.getNode(me1);
                 if (node1.getKey() != node.getKey()) {
                     double temp = shortestPathDist(node.getKey(),node1.getKey());
                     if (temp > max) {
@@ -278,22 +239,22 @@ public class algo implements DirectedWeightedGraphAlgorithms {
 
     @Override
     public List<NodeData> tsp(List<NodeData> cities) {
+        if(cities.size() == 0) {return null;}
         double weight;
-        double min = Integer.MAX_VALUE;
+        double min;
         Node minNode = null;
         LinkedList<NodeData> path = new LinkedList<>();
         path.add(cities.get(0));
-        while (cities.size() != 0) {
+        while (cities.size() > 0) {
             min =Integer.MAX_VALUE;
-            Node node = (Node) path.get(path.size()-1);// new Node((Node)path.get(path.size()-1));
-            boolean b = cities.contains(node);
-            //size or (size-1)
+            Node node = (Node) path.get(path.size()-1);
             if(cities.contains(node)) {
-                cities.remove(node);}
+                cities.remove(node);
+            }
             for (int i = 0; i < cities.size(); i++) {
                 Point2D p = new Point(node.getKey(), cities.get(i).getKey());
-                if(g.getEdgeMap().containsKey(p)) {
-                    weight = g.getEdgeMap().get(p).getWeight();
+                if(ourGraph.getEdgeMap().containsKey(p)) {
+                    weight = ourGraph.getEdgeMap().get(p).getWeight();
                 } else {
                     weight = shortestPathDist(node.getKey(), cities.get(i).getKey());
                 }
@@ -303,21 +264,25 @@ public class algo implements DirectedWeightedGraphAlgorithms {
                 }
             }
             Point2D p = new Point(path.get(path.size()-1).getKey(), minNode.getKey());
-            if (g.getEdgeMap().containsKey(p)) {
+            if (ourGraph.getEdgeMap().containsKey(p)) {
                 path.add(minNode);
             } else {
                 int x=path.get(path.size()-1).getKey();
                 int y=minNode.getKey();
                 List<NodeData> toMerge = shortestPath(x, y);
                 while (toMerge.size() != 0) {
-                    path.add(toMerge.get(0));
-                    toMerge.remove(0);
-                    if(cities.contains(this.getGraph().getNode(toMerge.get(0).getKey()))) {
+                    if (cities.contains(this.getGraph().getNode(toMerge.get(0).getKey()))) {
                         cities.remove(this.getGraph().getNode(toMerge.get(0).getKey()));
                     }
+                    if(path.get(path.size()-1) != toMerge.get(0)) {
+                        path.add(toMerge.get(0));
+                    }
+                    toMerge.remove(0);
+                    //if ((toMerge.size() > 0)) {  //check
+                   // }
                 }
             }
-            cities.remove(minNode);
+            if (cities.contains(minNode)){cities.remove(minNode);}
         }
         return path;
     }
@@ -339,6 +304,7 @@ public class algo implements DirectedWeightedGraphAlgorithms {
 
     @Override
     public boolean load(String file) {
+        this.ourGraph = new WeightedGraph();
         WeightedGraph graph = (WeightedGraph) this.getGraph();
         try {
             Object ob = new JSONParser().parse(new FileReader(file));

@@ -27,8 +27,8 @@ import api.algo;
 import api.geo_location;
 
 public class MainWindow extends JFrame {
-    static final int WINDOW_HEIGHT = Window.HEIGHT; //500
-    static final int WINDOW_WIDTH = Window.WIDTH; // 800;
+    static final int WINDOW_HEIGHT = 500; //Window.HEIGHT
+    static final int WINDOW_WIDTH = 800; // Window.WIDTH;
     static final int NODE_RADIUS = 6;
     static final int MARGIN = 30;
     static final int ARROW_WIDTH = 4;
@@ -49,6 +49,7 @@ public class MainWindow extends JFrame {
     private NodeData srcNodeToAddEdge;
     private NodeData centerNode;
     private List<NodeData> specialNodes;
+	private JButton tspButton;
     public MainWindow() {
         setTitle("Graphs");
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -167,16 +168,19 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 startTsp();
+                tspButton.setEnabled(true);
             }
         });
-        JButton tspButton = new JButton("End TSP");
+        tspButton = new JButton("End TSP");
         sidePanel.add(tspButton);
         tspButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                tspButton.setEnabled(false);
                 tsp();
             }
         });
+        tspButton.setEnabled(false);
 
         graphPanel = new JPanel() {
 
@@ -240,6 +244,8 @@ public class MainWindow extends JFrame {
                         g.drawString("" + (specialNodes.indexOf(node) + 1), (int)(x + NODE_RADIUS + 1), (int)y);
                     }
                     g.fillOval((int)x, (int)y, NODE_RADIUS, NODE_RADIUS);
+                    g.setColor(Color.BLACK);
+                    g.drawString("" + node.getKey(), (int)(x), (int)(y + 3 * NODE_RADIUS));
                     g.setColor(Color.RED);
                 }
             }
@@ -336,6 +342,10 @@ public class MainWindow extends JFrame {
         });
         menu.add(menuItem);
         setJMenuBar(menuBar);
+    }
+    public MainWindow(String jsonFile) {
+    	this();
+        load(jsonFile);
     }
     private int getNextID() {
         int id = 0;
@@ -475,6 +485,9 @@ public class MainWindow extends JFrame {
             return;
         }
         filename = fd.getDirectory()+"\\"+fd.getFile();
+        load(filename);
+    }
+    private void load(String filename) {
         graph.load(filename);
         DirectedWeightedGraph dg = graph.getGraph();
         NodeData node;
@@ -599,26 +612,24 @@ public class MainWindow extends JFrame {
         mode = START_TSP_MODE;
     }
     private void tsp() {
+    	if (specialNodes == null)
+    		return;
         List<NodeData> tspResult = graph.tsp(specialNodes);
         if (tspResult != null) {
             specialNodes = tspResult;
-            Thread thread = new Thread() {
-
-                @Override
-                public void run() {
-                    super.run();
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                    }
-                    specialNodes = null;
-                    graphPanel.repaint();
-                }
-            };
-            thread.start();
+            String info = "";
+            for (int i = 0; i <specialNodes.size(); i++) {
+            	info += "" + specialNodes.get(i).getKey();
+            	if (i < specialNodes.size() - 1)
+            		info += " -> ";
+            }
+            JOptionPane.showMessageDialog(
+                    null,
+                    info,
+                    "TSP Path",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
-        else {
-            specialNodes = null;
-        }
+        specialNodes = null;
+        graphPanel.repaint();
     }
 }

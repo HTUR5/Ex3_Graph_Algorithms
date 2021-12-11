@@ -33,11 +33,11 @@ public class Edge implements EdgeData{
 
     @Override
     public String getInfo() {
-        return null;
+        return this.info;
     }
 
     @Override
-    public void setInfo(String s) {}
+    public void setInfo(String s) { this.info = s;}
 
     @Override
     public int getTag() {

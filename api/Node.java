@@ -10,7 +10,11 @@ public class Node implements NodeData{
 
     public Node(int key, geo_location location, double weight, String info, int tag) {
         this.key = key;
-        this.location = new geo_location(location.x(), location.y(), location.z()); //does i need here deep copy
+        if(location == null) {
+            this.location = null;
+        } else {
+            this.location = new geo_location(location.x(), location.y(), location.z());
+        }
         this.weight = weight;
         this.info = info;
         this.tag = tag;
@@ -18,7 +22,11 @@ public class Node implements NodeData{
 
     public Node(Node n){
         this.key = n.key;
-        this.location = new geo_location(n.location.x(), n.location.y(), n.location.z());
+        if(n.location == null) {
+            this.location = null;
+        } else {
+            this.location = new geo_location(n.location.x(), n.location.y(), n.location.z());
+        }
         this.weight = n.weight;
         this.info = n.info;
         this.tag = n.tag;
@@ -31,12 +39,12 @@ public class Node implements NodeData{
 
     @Override
     public GeoLocation getLocation() {
-        return this.location;
+        if(this.location != null) {return this.location;}
+        return null;
     }
 
     @Override
     public void setLocation(GeoLocation p) {
-        //this.location = (geo_location) p;
         this.location.setX(p.x());
         this.location.setY(p.y());
         this.location.setZ(p.z());
@@ -54,11 +62,13 @@ public class Node implements NodeData{
 
     @Override
     public String getInfo() {
-        return null;
+        return this.info;
     }
 
     @Override
-    public void setInfo(String s) {}
+    public void setInfo(String s) {
+        this.info = s;
+    }
 
     @Override
     public int getTag() {
