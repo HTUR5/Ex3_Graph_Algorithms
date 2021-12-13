@@ -52,8 +52,8 @@ We were required to implement the following interfaces:
 
   
  ## How to use our program
-- Download The project from here.  <br>
-- open the folder of the project and run the cmd from its address.  <br>
+- Download The jar from here.  <br>
+- open the folder of the jar and run the cmd from its address.  <br>
 - write this Line in the cmd: java -jar Ex2.jar json_file_name.json  <br>
 
 The program window will be open, click the zoom out and the window will be displayed in full screen with the graph from the file. <br>
