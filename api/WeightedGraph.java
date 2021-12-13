@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class WeightedGraph implements DirectedWeightedGraph{
     private HashMap<Integer,Node> nodesMap;
@@ -90,23 +90,73 @@ public class WeightedGraph implements DirectedWeightedGraph{
     }
 
     @Override
-    public Iterator<NodeData> nodeIter() throws RuntimeException {
+    public Iterator<NodeData> nodeIter() {
         HashMap<Integer, NodeData> copyMap =(HashMap<Integer, NodeData>)this.nodesMap.clone();
-        Iterator<NodeData> iterNode = copyMap.values().iterator();
-        return iterNode;
+        return new Iterator<NodeData>() {
+            Iterator<NodeData> iter = copyMap.values().iterator();
+            private int finalMC = getMC();
+            @Override
+            public boolean hasNext() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return iter.hasNext();
+            }
+
+            @Override
+            public NodeData next() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return iter.next();
+            }
+        };
     }
 
     @Override
-    public Iterator<EdgeData> edgeIter() throws RuntimeException {
-        Iterator<EdgeData> iterEdge = this.edgeMap.values().iterator();
-        return iterEdge;
+    public Iterator<EdgeData> edgeIter() {
+        return new Iterator<EdgeData>() {
+            Iterator<EdgeData> iter = edgeMap.values().iterator();
+            private int finalMC = getMC();
+            @Override
+            public boolean hasNext() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return iter.hasNext();
+            }
+
+            @Override
+            public EdgeData next() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return iter.next();
+            }
+        };
     }
 
     @Override
-    public Iterator<EdgeData> edgeIter(int node_id) throws RuntimeException {
-        //Iterator<EdgeData> iterEdge = this.edgeMapS.entrySet().iterator();
-        Iterator<EdgeData> iterEdge = this.edgeMapS.get(node_id).values().iterator();
-        return iterEdge;
+    public Iterator<EdgeData> edgeIter(int node_id) {
+        return new Iterator<EdgeData>() {
+            Iterator<EdgeData> it_edge = edgeMapS.get(node_id).values().iterator();
+            private int finalMC = getMC();
+            @Override
+            public boolean hasNext() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return it_edge.hasNext();
+            }
+
+            @Override
+            public EdgeData next() {
+                if(finalMC != getMC()){
+                    throw new NoSuchElementException();
+                }
+                return it_edge.next();
+            }
+        };
     }
 
     @Override
@@ -121,7 +171,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
                 //remove from edgeMap
                 Point2D p = new Point(key, dest);
                 this.edgeMap.remove(p);
-                count--;
+                count++;
                 if(this.edgeMapD.get(dest).isEmpty()) {
                     this.edgeMapD.remove(dest);
                 }
@@ -136,7 +186,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
                 //remove from edgeMap
                 Point2D p = new Point(src, key);
                 this.edgeMap.remove(p);
-                count--;
+                count++;
                 if(this.edgeMapS.get(src).isEmpty()) {
                     this.edgeMapS.remove(src);
                 }
@@ -145,7 +195,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
         }
         //remove node from nodesMap
         this.nodesMap.remove(key);
-        count--;
+        count++;
         return node;
     }
 
@@ -163,7 +213,7 @@ public class WeightedGraph implements DirectedWeightedGraph{
         }
         Point2D p = new Point(src,dest);
         edgeMap.remove(p);
-        count--;
+        count++;
         return  edge;
     }
 

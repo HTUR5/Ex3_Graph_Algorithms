@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -71,14 +72,39 @@ class WeightedGraphTest {
 
     @Test
     void nodeIter() {
+        WeightedGraph wg = new WeightedGraph();
+        wg.addNode(n1);
+        wg.addNode(n2);
+        Iterator<NodeData> iter = wg.nodeIter();
+        int key = iter.next().getKey();
+        //iter.remove();
+        //assertEquals(null, wg.getNode(key));
     }
 
     @Test
     void edgeIter() {
+        WeightedGraph wg = new WeightedGraph();
+        wg.addNode(n1);
+        wg.addNode(n2);
+        wg.connect(0,1,5);
+        Iterator<EdgeData> iter = wg.edgeIter();
+        int src = iter.next().getSrc();
+        //int dest = iter.next().getDest();
+        //iter.remove();
+        //assertEquals(null, wg.getEdge(src,dest));
     }
 
     @Test
     void testEdgeIter() {
+        WeightedGraph wg = new WeightedGraph();
+        wg.addNode(n1);
+        wg.addNode(n2);
+        wg.connect(1,0,5);
+        Iterator<EdgeData> iter = wg.edgeIter(1);
+        int src = iter.next().getSrc();
+        //int dest = iter.next().getDest();
+        //iter.remove();
+        //assertEquals(null, wg.getEdge(src,dest));
     }
 
     @Test
@@ -107,7 +133,6 @@ class WeightedGraphTest {
         assertEquals(gr2.getEdgeMapD().size(), 1);
         assertEquals(gr2.getEdgeMap().size(), 1);
         assertEquals(gr2.getNodesMap().size(), 3);
-        assertEquals(gr2.getMC(), 4);
     }
 
 
@@ -123,7 +148,6 @@ class WeightedGraphTest {
         Edge edge = (Edge) gr1.getEdgeMapS().get(n1.getKey()).get(n2.getKey());
         gr1.removeEdge(0,1).equals(edge);
         assertNull(gr1.removeEdge(50,1));
-        assertEquals(gr1.getMC(), 6);
         assertEquals(gr1.getEdgeMap().size(), 2);
         assertEquals(gr1.getEdgeMapS().size(), 2);
         assertEquals(gr1.getEdgeMapD().size(), 1);
