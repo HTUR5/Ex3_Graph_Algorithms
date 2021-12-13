@@ -68,13 +68,28 @@ class algoTest {
     @Test
     void shortestPathDist() {
         algo gr1 = new algo();
-        gr1.load("C:\\Users\\hoday\\IdeaProjects\\Ex2\\src\\api\\G3.json");
+        Node n0 = new Node(0, geo_locationTest.g1, 3,"",0);
+        Node n1 = new Node(1, geo_locationTest.g2, 3,"",0);
+        Node n2 = new Node(2,new geo_location(5,1,8), 0, "", 0);
+        Node n3 = new Node(3,new geo_location(5,6,6), 0, "", 0);
+        gr1.getGraph().addNode(n0);
+        gr1.getGraph().addNode(n1);
+        gr1.getGraph().addNode(n2);
+        gr1.getGraph().addNode(n3);
+        gr1.getGraph().connect(n0.getKey(),n1.getKey(),4);
+        //gr1.getGraph().connect(n1.getKey(),n2.getKey(),3);
+        gr1.getGraph().connect(n2.getKey(),n3.getKey(),6);
+        gr1.getGraph().connect(n3.getKey(),n0.getKey(),6);
+        double dis = gr1.shortestPathDist(1,2);
+        assertEquals(dis,-1,0.1);
+        algo gr2 = new algo();
+        gr2.load("C:\\Users\\hoday\\IdeaProjects\\Ex2\\src\\api\\G3.json");
         long startTime = System.currentTimeMillis();
-        gr1.shortestPathDist(0,4);
+        double dis1 = gr2.shortestPathDist(0,4);
         long endTime = System.currentTimeMillis();
 //        System.out.println("That took " + (endTime - startTime) + " milliseconds");
 //        double dis= gr1.shortestPathDist(0,4);
-//        assertEquals(dis,10.92,0.1);
+//        assertEquals(dis1,-1,0.1);
     }
 
     @Test

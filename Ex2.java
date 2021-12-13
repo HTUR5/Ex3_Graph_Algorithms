@@ -14,9 +14,7 @@ public class Ex2 {
      * @return
      */
     public static DirectedWeightedGraph getGrapg(String json_file) {
-        //WeightedGraph ans = new WeightedGraph();
         algo object = new algo();
-        //object.init(ans);
         object.load(json_file);
         return object.getGraph();
     }
@@ -26,9 +24,7 @@ public class Ex2 {
      * @return
      */
     public static DirectedWeightedGraphAlgorithms getGrapgAlgo(String json_file) {
-        //WeightedGraph ans = new WeightedGraph();
         algo object = new algo();
-        //object.init(ans);
         object.load(json_file);
         return object;
     }

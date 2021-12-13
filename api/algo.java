@@ -149,11 +149,14 @@ public class algo implements DirectedWeightedGraphAlgorithms {
 
     @Override
     public double shortestPathDist(int src, int dest) {
+        if (ourGraph.getNode(src) == null || ourGraph.getNode(dest) == null) {
+            return -1;
+        }
         if(src == dest){
             ourGraph.getNode(dest).setTag(src);
             return 0;
         }
-        int V=ourGraph.nodeSize();
+        int V = ourGraph.nodeSize();
         Set<Node> settled = new HashSet<>();
         PriorityQueue<Node> pq = new PriorityQueue<>(V, new NodeComperator());
         Node srcNode = (Node) ourGraph.getNode(src);
@@ -175,6 +178,7 @@ public class algo implements DirectedWeightedGraphAlgorithms {
                 return -1;
             }
             Node node = pq.poll();
+            if(node == null ||ourGraph.getEdgeMapS().get(node.getKey())== null) {return -1;}
             Iterator<EdgeData> eIterator = ourGraph.edgeIter(node.getKey());
             while (eIterator.hasNext()) {
                 EdgeData neighborEdge = eIterator.next();
@@ -197,7 +201,7 @@ public class algo implements DirectedWeightedGraphAlgorithms {
             list.add(ourGraph.getNode(dest));
             return list;
         }
-        shortestPathDist(src,dest);
+        if(shortestPathDist(src,dest) == -1){return null;};
         Node n= (Node) ourGraph.getNode(dest);
         Node nSrc= (Node) ourGraph.getNode(src);
         while(n.getTag()!= nSrc.getKey()){
@@ -241,12 +245,13 @@ public class algo implements DirectedWeightedGraphAlgorithms {
     public List<NodeData> tsp(List<NodeData> cities) {
         if(cities.size() == 0) {return null;}
         double weight;
-        double min;
+        double min, dis;
         Node minNode = null;
         LinkedList<NodeData> path = new LinkedList<>();
         path.add(cities.get(0));
         while (cities.size() > 0) {
             min =Integer.MAX_VALUE;
+            weight = Integer.MAX_VALUE;
             Node node = (Node) path.get(path.size()-1);
             if(cities.contains(node)) {
                 cities.remove(node);
@@ -256,13 +261,17 @@ public class algo implements DirectedWeightedGraphAlgorithms {
                 if(ourGraph.getEdgeMap().containsKey(p)) {
                     weight = ourGraph.getEdgeMap().get(p).getWeight();
                 } else {
-                    weight = shortestPathDist(node.getKey(), cities.get(i).getKey());
+                    dis = shortestPathDist(node.getKey(), cities.get(i).getKey());
+                    if(dis != -1) {
+                        weight = dis;
+                    }
                 }
                 if (weight < min) {
                     min = weight;
                     minNode = (Node) cities.get(i);
                 }
             }
+            if (weight == Integer.MAX_VALUE) {return null;} //?
             Point2D p = new Point(path.get(path.size()-1).getKey(), minNode.getKey());
             if (ourGraph.getEdgeMap().containsKey(p)) {
                 path.add(minNode);
@@ -278,8 +287,6 @@ public class algo implements DirectedWeightedGraphAlgorithms {
                         path.add(toMerge.get(0));
                     }
                     toMerge.remove(0);
-                    //if ((toMerge.size() > 0)) {  //check
-                   // }
                 }
             }
             if (cities.contains(minNode)){cities.remove(minNode);}
